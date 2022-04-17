@@ -1,3 +1,1 @@
-import { Yes } from "./view";
-
-new Yes().sayHello();
+console.log("はい");
