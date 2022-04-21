@@ -1,5 +1,5 @@
-type NodeType = VNode | string | number;
-type Attributes = { [key: string]: string | Function };
+type NodeType = VNode | string | number | null;
+type Attributes = { [key: string]: string | Function } | null;
 
 export interface View<State, Actions> {
   (state: State, actions: Actions): VNode;
@@ -21,13 +21,12 @@ export function h(nodeName: keyof HTMLElementTagNameMap, attributes: Attributes,
   return { nodeName, attributes, children };
 }
 
-
 /**
  * リアルDOMを生成する
  */
 export function createElement(node: NodeType): HTMLElement | Text {
   if(!isVNode(node)){
-    return document.createTextNode(node.toString())
+    return document.createTextNode(node!.toString())
   }
 
   const el = document.createElement(node.nodeName);
@@ -74,7 +73,7 @@ function hasChanged(a: NodeType, b:NodeType): ChangedType {
     return ChangedType.Type;
   }
 
-  if(!isVNode(a) && a !== b){
+  if(!isVNode(a) && a !== b){    
     return ChangedType.Text;
   }
 
@@ -82,7 +81,7 @@ function hasChanged(a: NodeType, b:NodeType): ChangedType {
     if(a.nodeName !== b.nodeName){
       return ChangedType.Node
     }
-    if(a.attributes.value !== b.attributes.value){
+    if(a.attributes && b.attributes && a.attributes.value !== b.attributes.value){
       return ChangedType.Value
     }
     if(JSON.stringify(a.attributes) !== JSON.stringify(b.attributes)){
@@ -103,7 +102,7 @@ export function updateElement(
   newNode: NodeType,
   index = 0
 ): void {
-  if(!oldNode){
+  if(typeof oldNode === undefined || !oldNode && typeof oldNode === "object"){ 
     parent.appendChild(createElement(newNode));
     return;
   }
@@ -125,7 +124,7 @@ export function updateElement(
     case ChangedType.Value:
       updateValue(
         target as HTMLInputElement,
-        (newNode as VNode).attributes.value as string
+        (newNode as VNode).attributes!.value as string
       );
       return;
     case ChangedType.Attr:
