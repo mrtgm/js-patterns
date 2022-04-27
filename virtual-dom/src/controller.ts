@@ -1,5 +1,5 @@
 import { ActionTree } from "./action";
-import { View, VNode, createElement, updateElement } from "./view";
+import { createElement, updateElement, View, VNode } from "./view";
 
 interface AppConstructor<State, Actions> {
   el: HTMLElement | string;
@@ -18,10 +18,7 @@ export class App<State, Actions> {
   private skipRender?: boolean;
 
   constructor(params: AppConstructor<State, Actions>) {
-    this.el =
-      typeof params.el === "string"
-        ? document.querySelector(params.el) as HTMLElement
-        : params.el;
+    this.el = typeof params.el === "string" ? (document.querySelector(params.el) as HTMLElement) : params.el;
 
     this.view = params.view;
     this.state = params.state;
@@ -29,40 +26,39 @@ export class App<State, Actions> {
     this.resolveNode();
   }
 
-  private dispatchAction(actions: ActionTree<State>){
-      const dispatched = {} as ActionTree<State>;
-      for(let key in actions){
-          const action = actions[key];
-          dispatched[key] = (state: State, ...data: any) => {
-              const ret = action(state, ...data);
-              this.resolveNode();
-              return ret;
-          }
-      }
-      return dispatched;
+  private dispatchAction(actions: ActionTree<State>) {
+    const dispatched = {} as ActionTree<State>;
+    for (let key in actions) {
+      const action = actions[key];
+      dispatched[key] = (state: State, ...data: any) => {
+        const ret = action(state, ...data);
+        this.resolveNode();
+        return ret;
+      };
+    }
+    return dispatched;
   }
 
-  private resolveNode(){
-      this.newNode = this.view(this.state, this.actions);
-      this.scheduleRender();
+  private resolveNode() {
+    this.newNode = this.view(this.state, this.actions);
+    this.scheduleRender();
   }
 
-  private scheduleRender(){
-      if(!this.skipRender){
-          this.skipRender = true;
-          setTimeout(this.render.bind(this));
-      }
+  private scheduleRender() {
+    if (!this.skipRender) {
+      this.skipRender = true;
+      setTimeout(this.render.bind(this));
+    }
   }
 
   private render(): void {
-      if(this.oldNode){
-          updateElement(this.el, this.oldNode, this.newNode);
+    if (this.oldNode) {
+      updateElement(this.el, this.oldNode, this.newNode);
+    } else {
+      this.el.appendChild(createElement(this.newNode));
+    }
 
-      } else {
-          this.el.appendChild(createElement(this.newNode));
-      }
-
-      this.oldNode = this.newNode;
-      this.skipRender = false;
+    this.oldNode = this.newNode;
+    this.skipRender = false;
   }
 }
